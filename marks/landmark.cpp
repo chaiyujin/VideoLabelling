@@ -5,8 +5,8 @@ using namespace std;
 /* static */
 
 int *Landmark::g_mouthMask = nullptr;
-int  Landmark::g_mouthCount = 68;
-int  Landmark::g_count      = 20;
+int  Landmark::g_mouthCount = 20;
+int  Landmark::g_count      = 68;
 
 void Landmark::initStaticInfo() {
     if (g_mouthMask == nullptr) {
@@ -22,6 +22,7 @@ void Landmark::initStaticInfo() {
 				int j; fin >> j;
 				g_mouthMask[j] = 1;
             }
+			fin.close();
         }
         else {
             // use default indexes;
