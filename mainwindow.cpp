@@ -84,7 +84,12 @@ void MainWindow::openVideoFromPath(QString &path) {
 }
 
 void MainWindow::exportFramesToPath(QString &path) {
-
+	QString dir = path;
+	if (LastChar(dir) != '\\' && LastChar(dir) != '/') dir += '/';
+	For(i, m_project.frameCount()) {
+		if (m_project.isModified(i))
+			m_project.saveFrameAt(i, dir + QString::number(i));
+	}
 }
 
 /* input functions */
@@ -148,6 +153,26 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event) {
 			m_smallRect.setWidth(1); m_smallRect.setHeight(1);
 		}
 	}
+	else if (event->key() == Qt::Key_Equal) {
+		if (m_ctrl) {
+			m_project.appendStamp();
+		}
+	}
+	else if (event->key() == Qt::Key_Minus) {
+		if (m_ctrl) {
+			m_project.removeStamp();
+		}
+	}
+	else if (event->key() == ']') {
+		if (m_ctrl) {
+			changeFrame(m_project.nextStamp());
+		}
+	}
+	else if (event->key() == '[') {
+		if (m_ctrl) {
+			changeFrame(m_project.prevStamp());
+		}
+	}
 	else if (event->key() == Qt::Key_A) {
 		if (m_previous) m_project.usePreviousFrame("A");
 	}
@@ -193,7 +218,8 @@ void MainWindow::mouseMoveEvent(QMouseEvent *event) {
 	else {
 		m_selectRect.reset();
 		// point move mode
-		m_project.movePointTo(event->x(), event->y(), m_realRect, m_canvasRect);
+		if (m_canvasRect.contains(QPointF(event->x(), event->y())))
+			m_project.movePointTo(event->x(), event->y(), m_realRect, m_canvasRect);
 	}
 	update();
 }
@@ -228,7 +254,8 @@ void MainWindow::mouseReleaseEvent(QMouseEvent *event) {
 	else {
 		m_selectRect.reset();
 		// point move mode
-		m_project.movePointTo(event->x(), event->y(), m_realRect, m_canvasRect);
+		if (m_canvasRect.contains(QPointF(event->x(), event->y())))
+			m_project.movePointTo(event->x(), event->y(), m_realRect, m_canvasRect);
 	}
 	update();
 }
@@ -269,6 +296,34 @@ void MainWindow::paintEvent(QPaintEvent *event) {
 			painter.drawEllipse(QPoint(p.x, p.y), 1, 1);
 			if (m_project.isSelected(i)) { painter.setPen(QPen(Qt::white, Qt::SolidLine)); painter.setBrush(QBrush(Qt::white, Qt::SolidPattern)); }
 		}
+	}
+	{
+		QBrush invalidBrush = QBrush(QColor(87, 97, 106), Qt::SolidPattern);
+		QBrush validBrush = QBrush(QColor(37, 168, 198), Qt::SolidPattern);
+		painter.setPen(QPen(QColor(87, 97, 106), Qt::SolidLine));
+		int width = geometry().width() - 20;
+		int height = 10;
+		int left = 10, top = 20;
+		// draw valid bar
+		int maxCount = m_project.frameCount();
+		const auto &stamps = m_project.getStamps();
+		painter.setBrush(invalidBrush);
+		painter.drawRect(QRectF(left, top, width, height));
+		painter.setBrush(validBrush);
+		for (int i = 0; i < stamps.size() - 1; i += 2) {
+			int p0 = (stamps[i] * width / (float)maxCount) + left;
+			int p1 = (stamps[i + 1] * width / (float)maxCount) + left;
+			painter.drawRect(QRectF(p0, top, p1 - p0, height));
+		}
+		For(i, stamps.size()) {
+			int pos = (stamps[i] * width / (float)maxCount) + left;
+			painter.drawEllipse(QPoint(pos, 25), 2, 2);
+		}
+		int cur = (m_project.lastIndex() * width / (float)maxCount) + left;
+		painter.setBrush(QBrush(Qt::white, Qt::SolidPattern));
+		painter.drawEllipse(QPoint(cur, 25), 3, 3);
+		if (m_project.isValid()) ui->statusBar->setStyleSheet("background-color: rgb(37, 168, 198);");
+		else ui->statusBar->setStyleSheet("background-color: rgb(87, 97, 106);");
 	}
 	{
 		QString status = "raw";

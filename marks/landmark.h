@@ -61,6 +61,7 @@ public:
     Landmark() { Landmark::initStaticInfo(); }
 
 	bool loadFromFStream(std::ifstream &fin);
+	void exportPts(std::string path);
 	void fillZero() { 
 		points.clear();
 		For(i, g_count) { points.append(Point<qreal>()); }

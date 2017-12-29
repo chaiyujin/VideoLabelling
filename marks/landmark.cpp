@@ -46,6 +46,16 @@ bool Landmark::loadFromFStream(std::ifstream &fin) {
 	return true;
 }
 
+void Landmark::exportPts(std::string path) {
+	ofstream fout(path);
+	fout << "version: 1\nn_points: " << g_count << "\n{\n";
+	For(i, g_count) {
+		fout << points[i].x << " " << points[i].y << "\n";
+	}
+	fout << "}";
+	fout.close();
+}
+
 QDataStream &operator >> (QDataStream &stream, Landmark &lm) {
 	stream >> lm.points;
 	return stream;

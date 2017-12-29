@@ -87,6 +87,9 @@ bool Project::save(QString path, bool force) {
 	QFile file(path);
 	file.open(QIODevice::WriteOnly);
 	if (file.isOpen()) {
+		if (force) {
+			old_landmarks = new_landmarks;
+		}
 		QDataStream out(&file);
 		out << (*this);
 		file.close();
@@ -168,29 +171,44 @@ void Project::selectPoint(const QRectF &selectRect, const QRectF &realRect, cons
 }
 
 void Project::movePoint(float deltaX, float deltaY, const QRectF &realRect, const QRectF &canvasRect) {
+	bool changed = false;
 	Landmark lm = getCanvasLandmark(realRect, canvasRect);
 	For(i, lm.size()) {
 		if (!selected[i]) continue;
+		changed = true;
 		lm[i].x += deltaX;
 		lm[i].y += deltaY;
 	}
-	setCanvasLandmark(lm, realRect, canvasRect);
+	if (changed) setCanvasLandmark(lm, realRect, canvasRect);
 }
 
 void Project::movePointTo(float x, float y, const QRectF &realRect, const QRectF &canvasRect) {
+	bool changed = false;
 	Landmark lm = getCanvasLandmark(realRect, canvasRect);
 	For(i, lm.size()) {
 		if (!selected[i]) continue;
+		changed = true;
 		lm[i].x = x;
 		lm[i].y = y;
 	}
-	setCanvasLandmark(lm, realRect, canvasRect);
+	if (changed) setCanvasLandmark(lm, realRect, canvasRect);
+}
+
+void Project::saveFrameAt(int index, QString path) {
+	if (ValidIndex(index, new_landmarks.size())) {
+		m_capture.set(CV_CAP_PROP_POS_FRAMES, index);
+		m_capture >> m_frameImage;
+		cv::imwrite(QString(path + ".jpg").toStdString(), m_frameImage);
+		new_landmarks[index].exportPts(QString(path + ".pts").toStdString());
+	}
 }
 
 QDataStream &operator >> (QDataStream &stream, Project &pro) {
 	stream >> pro.old_landmarks;
 	stream >> pro.new_landmarks;
 	stream >> pro.modified;
+	stream >> pro.m_stamps;
+	qDebug() << pro.m_stamps.size();
 	return stream;
 }
 
@@ -198,5 +216,7 @@ QDataStream &operator << (QDataStream &stream, const Project &pro) {
 	stream << pro.old_landmarks;
 	stream << pro.new_landmarks;
 	stream << pro.modified;
+	stream << pro.m_stamps;
+	qDebug() << pro.m_stamps.size();
 	return stream;
 }

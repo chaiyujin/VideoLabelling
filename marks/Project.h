@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include <QImage>
 #include <QVector>
+#include <algorithm>
 
 
 class Project {
@@ -27,6 +28,7 @@ public:
 	void movePoint(float deltaX, float deltaY, const QRectF &realRect, const QRectF &canvasRect);
 	void movePointTo(float x, float y, const QRectF &realRect, const QRectF &canvasRect);
 	void usePreviousFrame(QString mode);
+	void saveFrameAt(int index, QString path);
 
 	void resetLandmark(int i=-1) { 
 		if (i < 0) i = m_lastIndex;
@@ -54,6 +56,45 @@ public:
 	friend QDataStream &operator >> (QDataStream &, Project &);
 	friend QDataStream &operator << (QDataStream &, const Project &);
 
+	// stamps and valid
+	int nextStamp() {
+		For(i, m_stamps.size() - 1) {
+			if (m_stamps[i] <= m_lastIndex && m_stamps[i + 1] > m_lastIndex) {
+				return m_stamps[i + 1];
+			}
+		}
+		return m_lastIndex;
+	}
+	int prevStamp() {
+		For(i, m_stamps.size() - 1) {
+			if (m_stamps[i] < m_lastIndex && m_stamps[i + 1] >= m_lastIndex) {
+				return m_stamps[i];
+			}
+		}
+		return m_lastIndex;
+	}
+	void appendStamp(int index = -1) {
+		if (index < 0) index = m_lastIndex;
+		if (!m_stamps.contains(index)) {
+			m_stamps.append(index);
+			std::sort(m_stamps.begin(), m_stamps.end());
+		}
+	}
+	void removeStamp(int index = -1) {
+		if (index < 0) index = m_lastIndex;
+		m_stamps.removeOne(index);
+	}
+	bool isValid(int index=-1) const {
+		if (index < 0) index = m_lastIndex;
+		for (int i = 0; i < m_stamps.size(); i += 2) {
+			if (i + 1 >= m_stamps.size()) continue;
+			if (index >= m_stamps[i] && index < m_stamps[i + 1]) return true;
+		}
+		return false;
+	}
+
+	const QVector<qint32> &getStamps() const { return m_stamps; }
+
 private:
 	bool m_saved;
 	QString m_videoPath;
@@ -70,6 +111,7 @@ private:
 	QVector<Landmark> old_landmarks;
 	QVector<Landmark> new_landmarks;
 	QVector<qint8>    modified;
+	QVector<qint32>	  m_stamps;
 
 	bool readFromLMSFile(QString);
 	void fillWithZero();
