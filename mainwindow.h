@@ -23,6 +23,8 @@ public:
 private slots:
     void openVideo();
     void exportFrames();
+	void exportStamps();
+	void importStamps();
 	void changeFrame(int index, bool force=false);
 	void changeFrameStep(const QString &);
 

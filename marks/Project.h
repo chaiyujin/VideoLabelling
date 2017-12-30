@@ -57,6 +57,8 @@ public:
 	friend QDataStream &operator << (QDataStream &, const Project &);
 
 	// stamps and valid
+	void exportStamps(QString path);
+	void importStamps(QString path);
 	int nextStamp() {
 		For(i, m_stamps.size() - 1) {
 			if (m_stamps[i] <= m_lastIndex && m_stamps[i + 1] > m_lastIndex) {
@@ -97,6 +99,7 @@ public:
 
 private:
 	bool m_saved;
+	QString m_stampsPath;
 	QString m_videoPath;
 	QString m_oldLMPath;
 	QString m_newLMPath;

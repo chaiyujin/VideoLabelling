@@ -25,6 +25,8 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->actionExport_labeled_frames, SIGNAL(triggered()), this, SLOT(exportFrames()));
 		connect(ui->horizontalSlider,			 SIGNAL(valueChanged(int)), this, SLOT(changeFrame(int)));
 		connect(ui->comboBox,					 SIGNAL(activated(const QString &)), this, SLOT(changeFrameStep(const QString &)));
+		connect(ui->actionExport_stamps,		 SIGNAL(triggered()), this, SLOT(exportStamps()));
+		connect(ui->actionImport_stamps,		 SIGNAL(triggered()), this, SLOT(importStamps()));
 		changeFrameStep(ui->comboBox->currentText());
     }
     {
@@ -43,7 +45,7 @@ MainWindow::~MainWindow()
 void MainWindow::openVideo() {
     QString fileName = QFileDialog::getOpenFileName(
             this, tr("Open video"),
-            "C:/Users/Public/Videos",
+            "D:/FaceDatabase/labeled",
             tr("Videoes (*.mpg *.mov *.mp4 *.avi)"));
     if (!fileName.isEmpty()) {
         openVideoFromPath(fileName);
@@ -58,6 +60,28 @@ void MainWindow::exportFrames() {
     if (!dir.isEmpty()) {
         exportFramesToPath(dir);
     }
+}
+
+void MainWindow::exportStamps() {
+	QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"),
+		"D:/FaceDatabase/labeled",
+		QFileDialog::ShowDirsOnly
+		| QFileDialog::DontResolveSymlinks);
+	if (!dir.isEmpty()) {
+		if (LastChar(dir) != '\\' || LastChar(dir) != '/') dir += '/';
+		dir += "stamps.txt";
+		m_project.exportStamps(dir);
+	}
+}
+
+void MainWindow::importStamps() {
+	QString fileName = QFileDialog::getOpenFileName(
+		this, tr("Open stamps"),
+		"C:/Users/Public/Documents",
+		tr("txt (*.txt)"));
+	if (!fileName.isEmpty()) {
+		m_project.importStamps(fileName);
+	}
 }
 
 /* main functions */
@@ -154,22 +178,22 @@ void MainWindow::keyReleaseEvent(QKeyEvent *event) {
 		}
 	}
 	else if (event->key() == Qt::Key_Equal) {
-		if (m_ctrl) {
+		if (true || m_ctrl) {
 			m_project.appendStamp();
 		}
 	}
 	else if (event->key() == Qt::Key_Minus) {
-		if (m_ctrl) {
+		if (true || m_ctrl) {
 			m_project.removeStamp();
 		}
 	}
 	else if (event->key() == ']') {
-		if (m_ctrl) {
+		if (true || m_ctrl) {
 			changeFrame(m_project.nextStamp());
 		}
 	}
 	else if (event->key() == '[') {
-		if (m_ctrl) {
+		if (true || m_ctrl) {
 			changeFrame(m_project.prevStamp());
 		}
 	}
@@ -286,15 +310,15 @@ void MainWindow::paintEvent(QPaintEvent *event) {
 		painter.drawRect(m_selectRect);
 	}
 	{
-		painter.setPen(QPen(Qt::white, Qt::SolidLine));
-		painter.setBrush(QBrush(Qt::white, Qt::SolidPattern));
+		painter.setPen(QPen(Qt::blue, Qt::SolidLine));
+		painter.setBrush(QBrush(Qt::blue, Qt::SolidPattern));
 		// draw landmarks
 		Landmark lm = m_project.getCanvasLandmark(m_realRect, m_canvasRect);
 		For(i, lm.size()) {
 			const auto &p = lm[i];
 			if (m_project.isSelected(i)) { painter.setPen(QPen(Qt::green, Qt::SolidLine)); painter.setBrush(QBrush(Qt::green, Qt::SolidPattern)); }
-			painter.drawEllipse(QPoint(p.x, p.y), 1, 1);
-			if (m_project.isSelected(i)) { painter.setPen(QPen(Qt::white, Qt::SolidLine)); painter.setBrush(QBrush(Qt::white, Qt::SolidPattern)); }
+			painter.drawEllipse(QPoint(p.x, p.y), 2, 2);
+			if (m_project.isSelected(i)) { painter.setPen(QPen(Qt::blue, Qt::SolidLine)); painter.setBrush(QBrush(Qt::blue, Qt::SolidPattern)); }
 		}
 	}
 	{

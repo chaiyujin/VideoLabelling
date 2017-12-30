@@ -3,6 +3,7 @@
 #include "../utils/ImageProcess.h"
 #include <QFile>
 #include <fstream>
+#include <QFileInfo>
 
 Project::Project() : m_isOpened(false), m_lastIndex(0), m_saved(false) {}
 
@@ -12,6 +13,7 @@ bool Project::openVideo(const QString &videoPath) {
 	m_isOpened = false;
 	MyString filePath(videoPath.toStdString());
 	auto list = filePath.split('.');
+	list[list.size() - 1] = "stps";     m_stampsPath = QString(MyString(".").join(list).c_str());
 	list[list.size() - 1] = "prj";		m_projectPath = QString(MyString(".").join(list).c_str());
 	list[list.size() - 1] = "lms";		m_oldLMPath = QString(MyString(".").join(list).c_str());
 	list[list.size() - 2] += "_new";    m_newLMPath = QString(MyString(".").join(list).c_str());
@@ -33,6 +35,7 @@ bool Project::openVideo(const QString &videoPath) {
 			m_isOpened &= readFromLMSFile(m_oldLMPath);
 			fillWithZero();
 		}
+		importStamps(m_stampsPath);
 	}
 
 	return m_isOpened;
@@ -86,10 +89,10 @@ bool Project::save(QString path, bool force) {
 	if (path.isEmpty()) path = m_projectPath;
 	QFile file(path);
 	file.open(QIODevice::WriteOnly);
+	exportStamps(m_stampsPath);
 	if (file.isOpen()) {
-		if (force) {
-			old_landmarks = new_landmarks;
-		}
+		if (force) { old_landmarks = new_landmarks; }
+		if (force) {  }
 		QDataStream out(&file);
 		out << (*this);
 		file.close();
@@ -199,7 +202,15 @@ void Project::saveFrameAt(int index, QString path) {
 		m_capture.set(CV_CAP_PROP_POS_FRAMES, index);
 		m_capture >> m_frameImage;
 		cv::imwrite(QString(path + ".jpg").toStdString(), m_frameImage);
-		new_landmarks[index].exportPts(QString(path + ".pts").toStdString());
+		/*int i = 1;
+		QString prefix(path);
+		QFileInfo info(prefix + ".pts");
+		while (info.exists()) {
+			path = prefix + QString::number(i++);
+			new (&info) QFileInfo(path + ".pts");
+		}*/
+		path += ".pts";
+		new_landmarks[index].exportPts(path.toStdString());
 	}
 }
 
@@ -219,4 +230,28 @@ QDataStream &operator << (QDataStream &stream, const Project &pro) {
 	stream << pro.m_stamps;
 	qDebug() << pro.m_stamps.size();
 	return stream;
+}
+
+void Project::exportStamps(QString path) {
+	ofstream fout(path.toStdString());
+	if (fout.is_open()) {
+		fout << m_stamps.size() << "\n";
+		For(i, m_stamps.size()) fout << m_stamps[i] << " ";
+		fout.close();
+	}
+}
+
+void Project::importStamps(QString path) {
+	ifstream fin(path.toStdString());
+	if (fin.is_open()) {
+		m_stamps.clear();
+		int size;
+		fin >> size;
+		For(i, size) {
+			int x;
+			fin >> x;
+			m_stamps.append(x);
+		}
+		fin.close();
+	}
 }

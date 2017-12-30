@@ -31,6 +31,8 @@ class Ui_MainWindow
 public:
     QAction *actionOpen_video;
     QAction *actionExport_labeled_frames;
+    QAction *actionExport_stamps;
+    QAction *actionImport_stamps;
     QWidget *centralWidget;
     QGridLayout *gridLayout_2;
     QWidget *centerWidget;
@@ -52,6 +54,10 @@ public:
         actionOpen_video->setObjectName(QStringLiteral("actionOpen_video"));
         actionExport_labeled_frames = new QAction(MainWindow);
         actionExport_labeled_frames->setObjectName(QStringLiteral("actionExport_labeled_frames"));
+        actionExport_stamps = new QAction(MainWindow);
+        actionExport_stamps->setObjectName(QStringLiteral("actionExport_stamps"));
+        actionImport_stamps = new QAction(MainWindow);
+        actionImport_stamps->setObjectName(QStringLiteral("actionImport_stamps"));
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QStringLiteral("centralWidget"));
         gridLayout_2 = new QGridLayout(centralWidget);
@@ -157,6 +163,8 @@ public:
         menuBar->addAction(menuFile->menuAction());
         menuFile->addAction(actionOpen_video);
         menuFile->addAction(actionExport_labeled_frames);
+        menuFile->addAction(actionImport_stamps);
+        menuFile->addAction(actionExport_stamps);
 
         retranslateUi(MainWindow);
 
@@ -171,6 +179,8 @@ public:
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "MainWindow", Q_NULLPTR));
         actionOpen_video->setText(QApplication::translate("MainWindow", "Open video", Q_NULLPTR));
         actionExport_labeled_frames->setText(QApplication::translate("MainWindow", "Export labeled frames", Q_NULLPTR));
+        actionExport_stamps->setText(QApplication::translate("MainWindow", "Export stamps", Q_NULLPTR));
+        actionImport_stamps->setText(QApplication::translate("MainWindow", "Import stamps", Q_NULLPTR));
         comboBox->clear();
         comboBox->insertItems(0, QStringList()
          << QApplication::translate("MainWindow", "step1", Q_NULLPTR)
